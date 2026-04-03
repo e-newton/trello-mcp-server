@@ -5,9 +5,9 @@ This module contains tools for managing Trello cards.
 import logging
 from typing import List
 
-from mcp.server.fastmcp import Context
+from mcp.server.fastmcp import Context, Image
 
-from server.models import TrelloCard
+from server.models import TrelloAttachment, TrelloCard
 from server.services.card import CardService
 from server.trello import client
 from server.dtos.update_card import UpdateCardPayload
@@ -125,6 +125,50 @@ async def delete_card(ctx: Context, card_id: str) -> dict:
         return result
     except Exception as e:
         error_msg = f"Failed to delete card: {str(e)}"
+        logger.error(error_msg)
+        await ctx.error(error_msg)
+        raise
+
+
+async def get_card_attachments(ctx: Context, card_id: str) -> List[TrelloAttachment]:
+    """Retrieves all attachments for a card.
+
+    Args:
+        card_id (str): The ID of the card.
+
+    Returns:
+        List[TrelloAttachment]: A list of attachment objects with metadata.
+    """
+    try:
+        logger.info(f"Getting attachments for card: {card_id}")
+        result = await service.get_card_attachments(card_id)
+        logger.info(f"Successfully retrieved {len(result)} attachments for card: {card_id}")
+        return result
+    except Exception as e:
+        error_msg = f"Failed to get card attachments: {str(e)}"
+        logger.error(error_msg)
+        await ctx.error(error_msg)
+        raise
+
+
+async def get_card_attachment_image(ctx: Context, card_id: str, attachment_id: str) -> Image:
+    """Downloads and returns an image attachment from a card so it can be viewed.
+
+    Args:
+        card_id (str): The ID of the card.
+        attachment_id (str): The ID of the attachment to download.
+
+    Returns:
+        Image: The image content that can be displayed inline.
+    """
+    try:
+        logger.info(f"Getting attachment image {attachment_id} for card: {card_id}")
+        image_bytes, mime_type = await service.get_card_attachment_image(card_id, attachment_id)
+        image_format = mime_type.split("/", 1)[1]
+        logger.info(f"Successfully retrieved attachment image {attachment_id}")
+        return Image(data=image_bytes, format=image_format)
+    except Exception as e:
+        error_msg = f"Failed to get card attachment image: {str(e)}"
         logger.error(error_msg)
         await ctx.error(error_msg)
         raise

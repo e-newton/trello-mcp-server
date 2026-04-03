@@ -4,7 +4,7 @@ Service for managing Trello cards in MCP server.
 
 from typing import Any, Dict, List
 
-from server.models import TrelloCard
+from server.models import TrelloAttachment, TrelloCard
 from server.utils.trello_api import TrelloClient
 
 
@@ -77,3 +77,19 @@ class CardService:
             Dict[str, Any]: The response from the delete operation.
         """
         return await self.client.DELETE(f"/cards/{card_id}")
+
+    async def get_card_attachments(self, card_id: str) -> List[TrelloAttachment]:
+        response = await self.client.GET(f"/cards/{card_id}/attachments")
+        return [TrelloAttachment(**attachment) for attachment in response]
+
+    async def get_card_attachment_image(self, card_id: str, attachment_id: str) -> tuple[bytes, str]:
+        response = await self.client.GET(f"/cards/{card_id}/attachments/{attachment_id}")
+        attachment = TrelloAttachment(**response)
+
+        if not attachment.mimeType or not attachment.mimeType.startswith("image/"):
+            raise ValueError(f"Attachment '{attachment.name}' is not an image (type: {attachment.mimeType})")
+
+        # Trello returns download URLs on trello.com, but auth works on api.trello.com
+        download_url = attachment.url.replace("https://trello.com/1/", "https://api.trello.com/1/")
+        image_bytes = await self.client.GET_bytes_url(download_url)
+        return image_bytes, attachment.mimeType

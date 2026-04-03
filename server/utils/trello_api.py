@@ -42,6 +42,27 @@ class TrelloClient:
             logger.error(f"Request error: {e}")
             raise httpx.RequestError(f"Failed to get {endpoint}: {str(e)}")
 
+
+    async def GET_bytes_url(self, url: str) -> bytes:
+        headers = {
+            "Authorization": f'OAuth oauth_consumer_key="{self.api_key}", oauth_token="{self.token}"'
+        }
+        try:
+            async with httpx.AsyncClient() as http_client:
+                response = await http_client.get(url, headers=headers)
+                response.raise_for_status()
+                return response.content
+        except httpx.HTTPStatusError as e:
+            logger.error(f"HTTP error: {e}")
+            raise httpx.HTTPStatusError(
+                f"Failed to get bytes from {url}: {str(e)}",
+                request=e.request,
+                response=e.response,
+            )
+        except httpx.RequestError as e:
+            logger.error(f"Request error: {e}")
+            raise httpx.RequestError(f"Failed to get bytes from {url}: {str(e)}")
+
     async def POST(self, endpoint: str, data: dict = None):
         all_params = {"key": self.api_key, "token": self.token}
         try:

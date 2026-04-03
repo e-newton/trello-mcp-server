@@ -32,6 +32,17 @@ class TrelloLabel(BaseModel):
     color: str | None = None
 
 
+class TrelloAttachment(BaseModel):
+    """Model representing a Trello card attachment."""
+
+    id: str
+    name: str
+    url: str
+    mimeType: str | None = None
+    bytes: int | None = None
+    isUpload: bool = False
+
+
 class TrelloCard(BaseModel):
     """Model representing a Trello card."""
 

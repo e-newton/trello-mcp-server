@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "trello": {
+      "command": "/home/enewton/development/trello-mcp-server/.venv/bin/python",
+      "args": ["main.py"],
+      "cwd": "/home/enewton/development/trello-mcp-server"
+    }
+  }
+}
